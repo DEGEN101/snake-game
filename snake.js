@@ -51,6 +51,7 @@ function Snake ()
     this.addSegment = function(x, y){
         let segment = new Block(x, y, "lime");
         body.push(segment);
+        console.log(body.length, body);
     }
 
     this.drawSnake = function(context) {
@@ -101,8 +102,13 @@ function update() {
 
     food.drawme(context);
 
-    snake.drawSnake(context);
+    if (snake.ateFood(food)){
+        snake.addSegment(food.position[0], food.position[1]);
+        placeFood();
+    }
+
     snake.update()
+    snake.drawSnake(context);
 }
 
 function changeDirection(e)
