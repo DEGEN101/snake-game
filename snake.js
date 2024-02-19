@@ -5,15 +5,78 @@ let cols = 20;
 let board;
 let context;
 
+
+function Block(x, y, colour) 
+{
+    this.colour = colour;
+    let position = [x, y];
+
+    this.drawme = function(context) {
+        context.fillStyle = this.colour;
+        context.fillRect(position[0], position[1], blockSize, blockSize);
+    };
+
+    Object.defineProperty(this, "position", {
+        get: function() {
+            return position;
+        },
+        set: function(new_position) {
+            position = new_position;
+        }
+    })
+}
+
+function Snake ()
+{
+    let head = new Block(blockSize * 5, blockSize * 5, "lime");
+    let body = [];
+    let velocity = [0, 0];
+
+    this.update = function() {
+        for (let i = body.length - 1; i > 0; i--){
+            body[i] = body[i - 1];
+        }
+        if (body.length){
+            body[0].position = head.position;
+        }
+
+        head.position[0] += velocity[0] * blockSize;
+        head.position[1] += velocity[1] * blockSize;
+    }
+
+    this.ateFood = function(food) {
+        return head.position[0] == food.position[0] && head.position[1] == food.position[1];
+    }
+
+    this.addSegment = function(x, y){
+        let segment = new Block(x, y, "lime");
+        body.push(segment);
+    }
+
+    this.drawSnake = function(context) {
+        head.drawme(context);
+
+        for (let i = 0; i < body.length; i++){
+            body[i].drawme(context);
+        }
+    }
+
+    Object.defineProperty(this, "velocity", {
+        get: function() {
+            return velocity;
+        },
+        set: function(new_velocity){
+            velocity = new_velocity;
+        }
+    })
+}
+
+
 // Snake
-let snakeX = blockSize * 5;
-let snakeY = blockSize * 5;
-let velocity = [0, 0];
-let snakeBody = [];
+let snake = new Snake();
 
 // Food
-let foodX = blockSize * 10;
-let foodY = blockSize * 10;
+let food = new Block(blockSize * 10, blockSize * 10, "red");
 
 let gameOver = false;
 
@@ -36,61 +99,29 @@ function update() {
     context.fillStyle = "#000";
     context.fillRect(0, 0, board.width, board.height);
 
-    context.fillStyle = "red";
-    context.fillRect(foodX, foodY, blockSize, blockSize);
+    food.drawme(context);
 
-    if (snakeX == foodX && snakeY == foodY){
-        snakeBody.push([foodX, foodY]);
-        placeFood();
-    }
-
-    for (let i = snakeBody.length - 1; i > 0; i--){
-        snakeBody[i] = snakeBody[i - 1];
-    }
-    if (snakeBody.length){
-        snakeBody[0] = [snakeX, snakeY];
-    }
-
-    context.fillStyle = "lime";
-    snakeX += velocity[0] * blockSize;
-    snakeY += velocity[1] * blockSize;
-    context.fillRect(snakeX, snakeY, blockSize, blockSize);
-    for (let i = 0; i < snakeBody.length; i++){
-        context.fillRect(snakeBody[i][0], snakeBody[i][1], blockSize, blockSize);
-    }
-
-    // Game Over Conditions
-    if (snakeX < 0 || snakeX > cols * blockSize || snakeY < 0 || snakeY > rows * blockSize){
-        gameOver = true;
-        alert("Game Over");
-    }
-
-    for (let i = 0; i < snakeBody.length; i++){
-        if (snakeX == snakeBody[i][0] && snakeY == snakeBody[i][1]){
-            gameOver = true;
-            alert("Game Over");
-            break;
-        }
-    }
+    snake.drawSnake(context);
+    snake.update()
 }
 
 function changeDirection(e)
 {
-    if (e.code == "ArrowUp" && velocity[1] != 1){
-        velocity = [0, -1];
+    if (e.code == "ArrowUp" && snake.velocity[1] != 1){
+        snake.velocity = [0, -1];
     }
-    if (e.code == "ArrowDown" && velocity[1] != -1){
-        velocity = [0, 1];
+    if (e.code == "ArrowDown" && snake.velocity[1] != -1){
+        snake.velocity = [0, 1];
     }
-    if (e.code == "ArrowRight" && velocity[0] != -1){
-        velocity = [1, 0];
+    if (e.code == "ArrowRight" && snake.velocity[0] != -1){
+        snake.velocity = [1, 0];
     }
-    if (e.code == "ArrowLeft" && velocity[0] != 1){
-        velocity = [-1, 0];
+    if (e.code == "ArrowLeft" && snake.velocity[0] != 1){
+        snake.velocity = [-1, 0];
     }
 }
 
 function placeFood(){
-    foodX = Math.floor(Math.random() * cols) * blockSize;
-    foodY = Math.floor(Math.random() * rows) * blockSize; 
+    food.position[0] = Math.floor(Math.random() * cols) * blockSize;
+    food.position[1] = Math.floor(Math.random() * rows) * blockSize; 
 }
