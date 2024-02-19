@@ -19,9 +19,6 @@ function Block(x, y, colour)
     Object.defineProperty(this, "position", {
         get: function() {
             return position;
-        },
-        set: function(new_position) {
-            position = new_position;
         }
     })
 }
@@ -34,10 +31,12 @@ function Snake ()
 
     this.update = function() {
         for (let i = body.length - 1; i > 0; i--){
-            body[i] = body[i - 1];
+            body[i].position[0] = body[i - 1].position[0];
+            body[i].position[1] = body[i - 1].position[1];
         }
         if (body.length){
-            body[0].position = head.position;
+            body[0].position[0] = head.position[0];
+            body[0].position[1] = head.position[1];
         }
 
         head.position[0] += velocity[0] * blockSize;
@@ -51,7 +50,6 @@ function Snake ()
     this.addSegment = function(x, y){
         let segment = new Block(x, y, "lime");
         body.push(segment);
-        console.log(body.length, body);
     }
 
     this.drawSnake = function(context) {
@@ -70,6 +68,19 @@ function Snake ()
             velocity = new_velocity;
         }
     })
+
+    this.hitSelf = function(){
+        for (let i = 0; i < body.length; i++){
+            if (head.position[0] == body[i].position[0] && head.position[1] == body[i].position[1]){
+                return true
+            }
+        }
+        return false;
+    }
+
+    this.outOfBound = function(){
+        return head.position[0] < 0 || head.position[0] > cols * blockSize || head.position[1] < 0 || head.position[1] > rows * blockSize;
+    }
 }
 
 
@@ -109,6 +120,11 @@ function update() {
 
     snake.update()
     snake.drawSnake(context);
+
+    if (snake.hitSelf() || snake.outOfBound()){
+        gameOver = true;
+        alert("Game Over!!!");
+    }
 }
 
 function changeDirection(e)
